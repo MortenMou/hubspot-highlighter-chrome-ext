@@ -16,11 +16,10 @@
     // Keywords that trigger urgent highlighting (case-insensitive)
     urgentKeywords: ['urgent', 'haster', 'kritisk', 'critical', 'asap'],
     
-    // Keywords that trigger warning highlighting
-    warningKeywords: ['important', 'viktig', 'snart', 'soon'],
-    
-    // Days after which a ticket is considered "aged"
-    agedTicketDays: 7,
+    // Age-based highlighting thresholds (in days)
+    freshTicketDays: 2,    // 0 to this = green (fresh)
+    warningTicketDays: 5,  // freshTicketDays+1 to this = yellow (needs attention)
+                           // above this = purple (overdue)
     
     // Highlight unassigned tickets
     highlightUnassigned: true,
@@ -29,13 +28,7 @@
     categoryHighlights: {
       'bug': 'urgent',
       'feil': 'urgent',
-      'error': 'urgent',
-      'hosting agreement request': 'info'
-    },
-    
-    // Owner-based highlights (owner name -> highlight type)
-    ownerHighlights: {
-      // Example: 'Nadire Chayer': 'info'
+      'error': 'urgent'
     }
   };
 
@@ -71,6 +64,17 @@
       current = current.parentElement;
     }
     return null;
+  }
+
+  function getAgeHighlightType(daysOpen) {
+    // Returns highlight type based on ticket age
+    if (daysOpen <= CONFIG.freshTicketDays) {
+      return 'fresh';      // Green - good response time
+    } else if (daysOpen <= CONFIG.warningTicketDays) {
+      return 'attention';  // Yellow - needs attention
+    } else {
+      return 'overdue';    // Purple - overdue
+    }
   }
 
   function highlightTicketCards() {
@@ -116,7 +120,7 @@
       const timeOpenEl = container.querySelector('[data-test-id="ticket-time-open"]');
       const timeOpenText = timeOpenEl ? timeOpenEl.textContent : '';
       
-      // Parse days open
+      // Parse days open (default to 0 if only hours/minutes)
       let daysOpen = 0;
       const daysMatch = timeOpenText.match(/(\d+)\s*(dag|day)/i);
       if (daysMatch) {
@@ -129,25 +133,17 @@
       // Apply highlights based on priority
       let highlightType = null;
       
-      // 1. Check urgent keywords in title
+      // 1. Check urgent keywords in title (highest priority - red)
       if (CONFIG.urgentKeywords.some(kw => title.includes(kw.toLowerCase()))) {
         highlightType = 'urgent';
       }
-      // 2. Check warning keywords in title
-      else if (CONFIG.warningKeywords.some(kw => title.includes(kw.toLowerCase()))) {
-        highlightType = 'warning';
-      }
-      // 3. Check category highlights
+      // 2. Check category highlights
       else if (category && CONFIG.categoryHighlights[category]) {
         highlightType = CONFIG.categoryHighlights[category];
       }
-      // 4. Check if aged
-      else if (daysOpen >= CONFIG.agedTicketDays) {
-        highlightType = 'aged';
-      }
-      // 5. Check unassigned
-      else if (CONFIG.highlightUnassigned && isUnassigned) {
-        highlightType = 'unassigned';
+      // 3. Age-based highlighting (green/yellow/purple)
+      else {
+        highlightType = getAgeHighlightType(daysOpen);
       }
       
       // Apply the highlight
@@ -157,14 +153,28 @@
 
   function applyCardHighlight(card, type, info) {
     // Reset previous highlights
-    card.classList.remove('hs-card-urgent', 'hs-card-warning', 'hs-card-info', 'hs-card-aged', 'hs-card-unassigned');
+    card.classList.remove(
+      'hs-card-urgent', 
+      'hs-card-fresh', 
+      'hs-card-attention', 
+      'hs-card-overdue', 
+      'hs-card-unassigned'
+    );
     
-    if (!type) return;
+    if (type) {
+      card.classList.add(`hs-card-${type}`);
+    }
     
-    card.classList.add(`hs-card-${type}`);
+    // Add unassigned class on top of age color if applicable
+    if (info.isUnassigned && CONFIG.highlightUnassigned) {
+      card.classList.add('hs-card-unassigned');
+    }
     
     // Log for debugging
-    console.log(`🎨 Highlighted card as ${type}:`, card.querySelector('[data-test-id="board-card-section-title-link"]')?.textContent?.trim());
+    console.log(`🎨 Highlighted card as ${type}${info.isUnassigned ? ' (unassigned)' : ''}:`, 
+      card.querySelector('[data-test-id="board-card-section-title-link"]')?.textContent?.trim(),
+      `(${info.daysOpen} days)`
+    );
   }
 
   function highlightTableRows() {
@@ -183,17 +193,11 @@
         return;
       }
       
-      // Check for warning keywords
-      if (CONFIG.warningKeywords.some(keyword => text.includes(keyword.toLowerCase()))) {
-        row.classList.add('hs-row-warning');
-        return;
-      }
-      
       // Check for unassigned
       if (CONFIG.highlightUnassigned) {
         const unassignedIndicators = ['unassigned', 'ikke tildelt', '--'];
         if (unassignedIndicators.some(indicator => text.includes(indicator.toLowerCase()))) {
-          row.classList.add('hs-row-warning', 'hs-unassigned');
+          row.classList.add('hs-row-attention', 'hs-unassigned');
         }
       }
     });
