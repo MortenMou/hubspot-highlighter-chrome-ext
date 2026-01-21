@@ -120,5 +120,3 @@ hubspot-highlighter/
     ├── icon48.png
     └── icon128.png
 ```
-
-# hubspot-highlighter-chrome-ext
