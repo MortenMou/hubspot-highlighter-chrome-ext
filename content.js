@@ -1,8 +1,24 @@
 // HubSpot Highlighter - Content Script
-// Customize the rules below to match your team's needs
+// Only runs on ticket pages (objects/0-5)
 
 (function() {
   'use strict';
+
+  // ============================================
+  // CHECK IF WE'RE ON A TICKET PAGE
+  // ============================================
+  
+  function isTicketPage() {
+    // 0-5 is the HubSpot object type ID for tickets
+    return window.location.href.includes('/objects/0-5/') || 
+           window.location.href.includes('/tickets/');
+  }
+
+  // Exit early if not on a ticket page
+  if (!isTicketPage()) {
+    console.log('🎨 HubSpot Highlighter: Not a ticket page, skipping');
+    return;
+  }
 
   // ============================================
   // CONFIGURATION - Edit these rules!
@@ -38,6 +54,9 @@
 
   function highlightElements() {
     if (!CONFIG.enabled) return;
+    
+    // Double-check we're still on a ticket page (for SPA navigation)
+    if (!isTicketPage()) return;
 
     // Highlight ticket cards on board views
     highlightTicketCards();
@@ -237,7 +256,7 @@
       subtree: true
     });
     
-    console.log('🎨 HubSpot Highlighter loaded');
+    console.log('🎨 HubSpot Highlighter loaded on ticket page');
   }
 
   // Load saved settings
