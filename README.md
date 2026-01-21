@@ -22,13 +22,6 @@ A Chrome extension to visually highlight important items in HubSpot for the  CS 
 5. Select the `hubspot-highlighter` folder
 6. The extension icon should appear in your toolbar
 
-### For Arc Browser (as a Boost)
-
-Arc's native Boosts only support CSS/JS injection for a single site. This extension works as a Chrome extension in Arc, giving you:
-- Persistent settings across sessions
-- A popup UI for configuration
-- Cross-site support if needed
-
 ## Configuration
 
 Click the extension icon to open the settings popup where you can:
