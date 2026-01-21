@@ -11,6 +11,21 @@ A Chrome extension to visually highlight tickets in HubSpot based on their age, 
 - ⚠️ **Unassigned Indicator**: Dashed border on tickets without an owner
 - ⚙️ **Configurable**: Customize thresholds and keywords via the popup
 
+## Supported Views
+
+### ✅ Board View
+Highlights ticket cards with colored borders and backgrounds based on the "Last Activity" property.
+
+### ✅ Table View (NEW!)
+Highlights table rows based on the date column (Create Date, Last Activity, etc.). Supports multiple date formats:
+- "Today at 15:09 GMT+1"
+- "Yesterday at 14:27 GMT+1"  
+- "19. jan. 2026 16:18 GMT+1" (European)
+- "Jan 19, 2026" (US)
+- ISO format (2026-01-19)
+
+**Multi-language support**: Norwegian, Swedish, English, German, Spanish, French date formats.
+
 ## Installation
 
 ### For Chrome / Arc / Edge / Brave
@@ -39,6 +54,15 @@ Click the extension icon to open the settings popup where you can:
    - Green → Yellow → Purple as tickets get older
 3. **Unassigned** – dashed border layered on top of age color
 
+## How It Works
+
+The extension:
+1. Detects if you're on a HubSpot ticket page (board view or table view)
+2. Finds date columns/properties automatically by looking for headers like "Create Date", "Last Activity", etc.
+3. Parses dates in multiple formats and locales
+4. Calculates days since the date
+5. Applies color-coded highlighting based on your thresholds
+
 ## Files
 
 ```
@@ -52,6 +76,17 @@ Click the extension icon to open the settings popup where you can:
     ├── icon48.png
     └── icon128.png
 ```
+
+## Troubleshooting
+
+**Table view not highlighting?**
+- Make sure a date column is visible (Create Date or Last Activity)
+- Check the browser console (F12) for debug messages starting with 🎨
+- The extension identifies columns by their header text
+
+**Colors not showing?**
+- Refresh the page after installing/updating the extension
+- Check that the extension is enabled in chrome://extensions/
 
 ## Author
 
