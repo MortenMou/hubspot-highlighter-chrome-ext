@@ -68,22 +68,21 @@
     'nov': 10, 'november': 10,
     'dec': 11, 'december': 11,
     // Norwegian/Swedish
-    'januar': 0, 'februari': 1, 'mars': 2, 'april': 3, 'mai': 4,
-    'juni': 5, 'juli': 6, 'augusti': 7, 'september': 8,
-    'oktober': 9, 'november': 10, 'desember': 11, 'december': 11,
+    'januar': 0, 'februari': 1, 'mars': 2, 'mai': 4,
+    'juni': 5, 'juli': 6, 'augusti': 7,
+    'oktober': 9, 'desember': 11,
     // German
-    'januar': 0, 'februar': 1, 'märz': 2, 'mär': 2,
-    'juni': 5, 'juli': 6, 'august': 7,
-    'oktober': 9, 'dezember': 11, 'dez': 11,
+    'märz': 2, 'mär': 2,
+    'dezember': 11, 'dez': 11,
     // Spanish
     'enero': 0, 'ene': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'abr': 3,
     'mayo': 4, 'junio': 5, 'julio': 6, 'agosto': 7, 'ago': 7,
     'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11, 'dic': 11,
     // French
     'janvier': 0, 'janv': 0, 'février': 1, 'févr': 1, 'fév': 1,
-    'mars': 2, 'avril': 3, 'avr': 3, 'mai': 4, 'juin': 5,
-    'juillet': 6, 'juil': 6, 'août': 7, 'aoû': 7, 'septembre': 8, 'sept': 8,
-    'octobre': 9, 'oct': 9, 'novembre': 10, 'décembre': 11, 'déc': 11
+    'avril': 3, 'avr': 3,
+    'juillet': 6, 'juil': 6, 'août': 7, 'aoû': 7,
+    'octobre': 9, 'décembre': 11, 'déc': 11
   };
 
   // "Today" and "Yesterday" in various languages
@@ -112,19 +111,22 @@
       }
     }
     
-    // Try to parse date formats like:
-    // "19. jan. 2026 16:18 GMT+1"
-    // "Jan 19, 2026"
-    // "19 jan 2026"
-    // "2026-01-19"
+    // Pattern 1: DD.MM.YYYY (European with dots, like "21.01.2026")
+    const dotMatch = text.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (dotMatch) {
+      const day = parseInt(dotMatch[1]);
+      const month = parseInt(dotMatch[2]) - 1; // 0-indexed
+      const year = parseInt(dotMatch[3]);
+      return new Date(year, month, day);
+    }
     
-    // Pattern 1: ISO format (2026-01-19)
+    // Pattern 2: ISO format (2026-01-19)
     const isoMatch = text.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) {
       return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
     }
     
-    // Pattern 2: "19. jan. 2026" or "19 jan 2026" (European)
+    // Pattern 3: "19. jan. 2026" or "19 jan 2026" (European with month name)
     const euroMatch = text.match(/(\d{1,2})\.?\s*([a-zäöüéè]+)\.?\s*(\d{4})/i);
     if (euroMatch) {
       const day = parseInt(euroMatch[1]);
@@ -136,7 +138,7 @@
       }
     }
     
-    // Pattern 3: "Jan 19, 2026" or "January 19, 2026" (US)
+    // Pattern 4: "Jan 19, 2026" or "January 19, 2026" (US)
     const usMatch = text.match(/([a-zäöüéè]+)\.?\s*(\d{1,2}),?\s*(\d{4})/i);
     if (usMatch) {
       const monthStr = usMatch[1].toLowerCase();
@@ -246,11 +248,21 @@
       const titleEl = container.querySelector('[data-test-id="board-card-section-title-link"]');
       const title = titleEl ? titleEl.textContent.toLowerCase() : '';
       
-      // Parse property labels to find owner, category, and last activity date
+      // Get ALL text content from the card to search for dates and properties
+      const cardText = container.textContent || '';
+      
+      // Look for "Last activity date: DD.MM.YYYY" pattern in card text
+      let lastActivityDate = null;
+      const lastActivityMatch = cardText.match(/last activity date[:\s]+(\d{1,2}\.\d{1,2}\.\d{4})/i) ||
+                                cardText.match(/siste aktivitet[:\s]+(\d{1,2}\.\d{1,2}\.\d{4})/i);
+      if (lastActivityMatch) {
+        lastActivityDate = lastActivityMatch[1];
+      }
+      
+      // Also check property labels (original method as fallback)
       const propertyLabels = container.querySelectorAll('[data-test-id="cdbc-property-label"]');
       let hasOwner = false;
       let category = '';
-      let lastActivityDate = null;
       
       propertyLabels.forEach(label => {
         const labelText = label.textContent.toLowerCase();
@@ -267,19 +279,22 @@
           category = value.toLowerCase();
         }
         
-        // Check for last activity date (format: 2026-01-14)
-        if (labelText.includes('last activity') || labelText.includes('siste aktivitet')) {
+        // Check for last activity date in property labels
+        if (!lastActivityDate && (labelText.includes('last activity') || labelText.includes('siste aktivitet'))) {
           lastActivityDate = value;
         }
       });
       
+      // Also check for owner in card text
+      if (!hasOwner && (cardText.toLowerCase().includes('ticket owner:') || cardText.toLowerCase().includes('eier:'))) {
+        hasOwner = true;
+      }
+      
       // Calculate days since last activity
-      let daysSinceActivity = 0;
+      let daysSinceActivity = null;
       if (lastActivityDate) {
-        const days = getDaysSinceDate(lastActivityDate);
-        if (days !== null) {
-          daysSinceActivity = days;
-        }
+        daysSinceActivity = getDaysSinceDate(lastActivityDate);
+        console.log(`🎨 Card date parsing: "${lastActivityDate}" → ${daysSinceActivity} days`);
       }
       
       // Check for unassigned - ticket is unassigned if there's no owner property
@@ -297,8 +312,13 @@
         highlightType = CONFIG.categoryHighlights[category];
       }
       // 3. Age-based highlighting (green/yellow/purple) based on last activity
-      else {
+      else if (daysSinceActivity !== null) {
         highlightType = getAgeHighlightType(daysSinceActivity);
+      }
+      // 4. Default to null (no color) if we couldn't parse a date
+      else {
+        highlightType = null;
+        console.log(`🎨 No date found for card: "${title.substring(0, 30)}..."`);
       }
       
       // Apply the highlight
@@ -326,9 +346,9 @@
     }
     
     // Log for debugging
-    console.log(`🎨 Highlighted card as ${type}${info.isUnassigned ? ' (unassigned)' : ''}:`, 
-      card.querySelector('[data-test-id="board-card-section-title-link"]')?.textContent?.trim(),
-      `(${info.daysSinceActivity} days since activity, last: ${info.lastActivityDate || 'unknown'})`
+    console.log(`🎨 Highlighted card as ${type || 'none'}${info.isUnassigned ? ' (unassigned)' : ''}:`, 
+      card.querySelector('[data-test-id="board-card-section-title-link"]')?.textContent?.trim().substring(0, 40),
+      `(${info.daysSinceActivity !== null ? info.daysSinceActivity + ' days' : 'no date'}, last: ${info.lastActivityDate || 'unknown'})`
     );
   }
 
@@ -336,68 +356,53 @@
   // TABLE VIEW HIGHLIGHTING
   // ============================================
 
-  function findDateColumnIndex(headerRow) {
-    // Look for date-related column headers
-    const dateColumnKeywords = [
-      'create date', 'created', 'opprettet', 'erstellt', 'créé',
-      'last activity', 'siste aktivitet', 'letzte aktivität', 
-      'last modified', 'sist endret', 'modified',
-      'date', 'dato', 'datum'
-    ];
-    
-    const cells = headerRow.querySelectorAll('th, td, [role="columnheader"]');
-    
-    for (let i = 0; i < cells.length; i++) {
-      const cellText = cells[i].textContent.toLowerCase().trim();
-      for (const keyword of dateColumnKeywords) {
-        if (cellText.includes(keyword)) {
-          console.log(`🎨 Found date column at index ${i}: "${cellText}"`);
-          return i;
-        }
-      }
-    }
-    
-    return -1; // Not found
-  }
-
-  function findOwnerColumnIndex(headerRow) {
-    const ownerKeywords = ['owner', 'eier', 'besitzer', 'ticket owner', 'assigned'];
-    const cells = headerRow.querySelectorAll('th, td, [role="columnheader"]');
-    
-    for (let i = 0; i < cells.length; i++) {
-      const cellText = cells[i].textContent.toLowerCase().trim();
-      for (const keyword of ownerKeywords) {
-        if (cellText.includes(keyword)) {
-          return i;
-        }
-      }
-    }
-    return -1;
-  }
-
   function highlightTableRows() {
-    // Find all tables on the page
+    // Find the main ticket table - HubSpot uses specific data attributes
     const tables = document.querySelectorAll('table');
     
     tables.forEach(table => {
+      // Skip small tables (likely not the main data table)
+      const rows = table.querySelectorAll('tbody tr');
+      if (rows.length < 2) return;
+      
       // Find header row to identify columns
-      const headerRow = table.querySelector('thead tr, tr:first-child');
+      const headerRow = table.querySelector('thead tr');
       if (!headerRow) return;
       
-      const dateColIndex = findDateColumnIndex(headerRow);
-      const ownerColIndex = findOwnerColumnIndex(headerRow);
+      const headers = headerRow.querySelectorAll('th');
+      let dateColIndex = -1;
+      let ownerColIndex = -1;
       
-      // Get all body rows
-      const rows = table.querySelectorAll('tbody tr, tr:not(:first-child)');
+      // Find column indices by header text
+      headers.forEach((header, index) => {
+        const text = header.textContent.toLowerCase().trim();
+        
+        // Date columns
+        if (text.includes('create date') || text.includes('opprettet') || 
+            text.includes('last activity') || text.includes('siste aktivitet') ||
+            text.includes('dato') || text.includes('date')) {
+          if (dateColIndex === -1) { // Take first date column found
+            dateColIndex = index;
+            console.log(`🎨 Table: Found date column "${text}" at index ${index}`);
+          }
+        }
+        
+        // Owner columns
+        if (text.includes('owner') || text.includes('eier') || text.includes('assigned')) {
+          ownerColIndex = index;
+        }
+      });
       
-      console.log(`🎨 Processing table with ${rows.length} rows, date column: ${dateColIndex}, owner column: ${ownerColIndex}`);
+      console.log(`🎨 Table: Processing ${rows.length} rows, date col: ${dateColIndex}, owner col: ${ownerColIndex}`);
       
-      rows.forEach(row => {
-        // Skip if already highlighted or is header row
-        if (row.dataset.hsHighlighted || row.querySelector('th')) return;
+      rows.forEach((row, rowIndex) => {
+        // Skip if already highlighted
+        if (row.dataset.hsHighlighted) return;
         row.dataset.hsHighlighted = 'true';
         
-        const cells = row.querySelectorAll('td, [role="cell"]');
+        const cells = row.querySelectorAll('td');
+        if (cells.length === 0) return;
+        
         const rowText = row.textContent.toLowerCase();
         
         // 1. Check for urgent keywords first (highest priority)
@@ -406,93 +411,42 @@
           return;
         }
         
-        // 2. Try to get date and calculate age
-        let daysSinceActivity = null;
-        
+        // 2. Try to parse date from the date column
         if (dateColIndex >= 0 && cells[dateColIndex]) {
           const dateText = cells[dateColIndex].textContent.trim();
-          daysSinceActivity = getDaysSinceDate(dateText);
+          const daysSince = getDaysSinceDate(dateText);
           
-          if (daysSinceActivity !== null) {
-            const highlightType = getAgeHighlightType(daysSinceActivity);
+          if (daysSince !== null) {
+            const highlightType = getAgeHighlightType(daysSince);
             applyRowHighlight(row, highlightType);
             
             // Check for unassigned
             if (CONFIG.highlightUnassigned && ownerColIndex >= 0 && cells[ownerColIndex]) {
-              const ownerText = cells[ownerColIndex].textContent.trim();
-              if (ownerText === '--' || ownerText === '' || ownerText.toLowerCase().includes('no owner') || ownerText.toLowerCase().includes('unassigned')) {
+              const ownerText = cells[ownerColIndex].textContent.trim().toLowerCase();
+              if (ownerText === '--' || ownerText === '' || ownerText.includes('no owner') || ownerText.includes('unassigned')) {
                 row.classList.add('hs-unassigned');
               }
             }
             
-            console.log(`🎨 Table row: ${daysSinceActivity} days old → ${highlightType}`, dateText);
+            if (rowIndex < 5) { // Only log first few rows
+              console.log(`🎨 Table row ${rowIndex}: "${dateText}" → ${daysSince} days → ${highlightType}`);
+            }
             return;
           }
         }
         
-        // 3. Fallback: Check for unassigned indicators if no date parsing worked
-        if (CONFIG.highlightUnassigned) {
-          const unassignedIndicators = ['unassigned', 'ikke tildelt', 'no owner', '--'];
-          if (unassignedIndicators.some(indicator => {
-            // Only match '--' if it's in an owner-related context
-            if (indicator === '--') {
-              return ownerColIndex >= 0 && cells[ownerColIndex]?.textContent.trim() === '--';
-            }
-            return rowText.includes(indicator.toLowerCase());
-          })) {
-            row.classList.add('hs-row-attention', 'hs-unassigned');
+        // 3. Fallback: scan all cells for date-like content
+        for (const cell of cells) {
+          const cellText = cell.textContent.trim();
+          const daysSince = getDaysSinceDate(cellText);
+          
+          if (daysSince !== null) {
+            const highlightType = getAgeHighlightType(daysSince);
+            applyRowHighlight(row, highlightType);
+            return;
           }
         }
       });
-    });
-    
-    // Also try HubSpot's custom table structure (data-selenium-test)
-    highlightHubSpotCustomTable();
-  }
-
-  function highlightHubSpotCustomTable() {
-    // HubSpot sometimes uses custom div-based tables
-    const customRows = document.querySelectorAll('[data-selenium-test="table-row"], [data-test-id*="table-row"]');
-    
-    customRows.forEach(row => {
-      if (row.dataset.hsHighlighted) return;
-      row.dataset.hsHighlighted = 'true';
-      
-      const rowText = row.textContent.toLowerCase();
-      
-      // Check for urgent keywords
-      if (CONFIG.urgentKeywords.some(keyword => rowText.includes(keyword.toLowerCase()))) {
-        applyRowHighlight(row, 'urgent');
-        return;
-      }
-      
-      // Try to find date in the row
-      const datePatterns = [
-        /today at/i,
-        /yesterday at/i,
-        /i dag/i,
-        /i går/i,
-        /\d{1,2}[.\s]+[a-z]+[.\s]+\d{4}/i
-      ];
-      
-      // Look for cells that might contain dates
-      const cells = row.querySelectorAll('[data-test-id*="cell"], [role="cell"], td, > div');
-      
-      for (const cell of cells) {
-        const cellText = cell.textContent.trim();
-        
-        for (const pattern of datePatterns) {
-          if (pattern.test(cellText)) {
-            const days = getDaysSinceDate(cellText);
-            if (days !== null) {
-              const highlightType = getAgeHighlightType(days);
-              applyRowHighlight(row, highlightType);
-              console.log(`🎨 Custom table row: ${days} days → ${highlightType}`, cellText);
-              return;
-            }
-          }
-        }
-      }
     });
   }
 
@@ -564,6 +518,10 @@
     chrome.storage.onChanged.addListener((changes) => {
       if (changes.highlighterConfig) {
         Object.assign(CONFIG, changes.highlighterConfig.newValue);
+        // Reset highlighted flags so elements get re-processed
+        document.querySelectorAll('[data-hs-highlighted]').forEach(el => {
+          delete el.dataset.hsHighlighted;
+        });
         highlightElements();
       }
     });
