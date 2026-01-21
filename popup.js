@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     highlightUnassigned: document.getElementById('highlightUnassigned'),
     showIndicator: document.getElementById('showIndicator'),
     urgentKeywords: document.getElementById('urgentKeywords'),
-    warningKeywords: document.getElementById('warningKeywords'),
-    agedTicketDays: document.getElementById('agedTicketDays'),
+    freshTicketDays: document.getElementById('freshTicketDays'),
+    warningTicketDays: document.getElementById('warningTicketDays'),
     saveBtn: document.getElementById('saveBtn')
   };
 
@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showIndicator: false,
     highlightUnassigned: true,
     urgentKeywords: ['urgent', 'haster', 'kritisk', 'critical', 'asap'],
-    warningKeywords: ['important', 'viktig', 'snart', 'soon'],
-    agedTicketDays: 7
+    freshTicketDays: 2,
+    warningTicketDays: 5
   };
 
   // Load saved settings
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.highlightUnassigned.checked = config.highlightUnassigned;
       elements.showIndicator.checked = config.showIndicator;
       elements.urgentKeywords.value = config.urgentKeywords.join(', ');
-      elements.warningKeywords.value = config.warningKeywords.join(', ');
-      elements.agedTicketDays.value = config.agedTicketDays;
+      elements.freshTicketDays.value = config.freshTicketDays;
+      elements.warningTicketDays.value = config.warningTicketDays;
     });
   }
 
@@ -45,11 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .split(',')
         .map(s => s.trim().toLowerCase())
         .filter(s => s.length > 0),
-      warningKeywords: elements.warningKeywords.value
-        .split(',')
-        .map(s => s.trim().toLowerCase())
-        .filter(s => s.length > 0),
-      agedTicketDays: parseInt(elements.agedTicketDays.value) || 7
+      freshTicketDays: parseInt(elements.freshTicketDays.value) || 2,
+      warningTicketDays: parseInt(elements.warningTicketDays.value) || 5
     };
 
     chrome.storage.sync.set({ highlighterConfig: config }, () => {
