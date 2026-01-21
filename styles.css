@@ -25,37 +25,40 @@
 
 /* Urgent cards - red highlight (keywords like haster, kritisk) */
 .hs-card-urgent {
-  border-left: 4px solid var(--hs-highlight-urgent) !important;
+  border: 2px solid var(--hs-highlight-urgent) !important;
+  border-left-width: 4px !important;
   box-shadow: var(--hs-glow-urgent), 0 2px 8px rgba(0,0,0,0.1) !important;
   background: linear-gradient(90deg, rgba(255, 71, 87, 0.08) 0%, transparent 50%) !important;
   animation: urgentPulse 3s ease-in-out infinite;
 }
 
-/* Fresh cards - green highlight (0-2 days old) */
+/* Fresh cards - green highlight (0-2 days since last activity) */
 .hs-card-fresh {
-  border-left: 4px solid var(--hs-highlight-fresh) !important;
+  border: 2px solid var(--hs-highlight-fresh) !important;
+  border-left-width: 4px !important;
   box-shadow: var(--hs-glow-fresh), 0 2px 8px rgba(0,0,0,0.1) !important;
   background: linear-gradient(90deg, rgba(46, 213, 115, 0.08) 0%, transparent 50%) !important;
 }
 
-/* Attention cards - yellow/orange highlight (3-5 days old) */
+/* Attention cards - yellow/orange highlight (3-5 days since last activity) */
 .hs-card-attention {
-  border-left: 4px solid var(--hs-highlight-attention) !important;
+  border: 2px solid var(--hs-highlight-attention) !important;
+  border-left-width: 4px !important;
   box-shadow: var(--hs-glow-attention), 0 2px 8px rgba(0,0,0,0.1) !important;
   background: linear-gradient(90deg, rgba(255, 165, 2, 0.08) 0%, transparent 50%) !important;
 }
 
-/* Overdue cards - purple highlight (6+ days old) */
+/* Overdue cards - purple highlight (6+ days since last activity) */
 .hs-card-overdue {
-  border-left: 4px solid var(--hs-highlight-overdue) !important;
+  border: 2px solid var(--hs-highlight-overdue) !important;
+  border-left-width: 4px !important;
   box-shadow: var(--hs-glow-overdue), 0 2px 8px rgba(0,0,0,0.1) !important;
   background: linear-gradient(90deg, rgba(165, 94, 234, 0.08) 0%, transparent 50%) !important;
 }
 
-/* Unassigned cards - dashed border (layered on top of age color) */
+/* Unassigned cards - dashed border style (keeps the age color) */
 .hs-card-unassigned {
-  border: 2px dashed #ff6b81 !important;
-  border-left-width: 4px !important;
+  border-style: dashed !important;
 }
 
 /* ============================================
