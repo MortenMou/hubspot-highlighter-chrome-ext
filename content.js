@@ -93,13 +93,24 @@
       const titleEl = container.querySelector('[data-test-id="board-card-section-title-link"]');
       const title = titleEl ? titleEl.textContent.toLowerCase() : '';
       
-      // Get ticket owner
-      const ownerEl = container.querySelector('[data-test-id="cdbc-property-value"]');
-      const owner = ownerEl ? ownerEl.textContent : '';
+      // Check for Ticket owner by looking for the label
+      const propertyLabels = container.querySelectorAll('[data-test-id="cdbc-property-label"]');
+      let hasOwner = false;
+      let category = '';
       
-      // Get category
-      const categoryEl = container.querySelector('[data-test-id="cdbc-property-2"] [data-test-id="cdbc-property-value"]');
-      const category = categoryEl ? categoryEl.textContent.toLowerCase() : '';
+      propertyLabels.forEach(label => {
+        const labelText = label.textContent.toLowerCase();
+        if (labelText.includes('ticket owner') || labelText.includes('eier') || labelText.includes('owner')) {
+          hasOwner = true;
+        }
+        if (labelText.includes('category') || labelText.includes('kategori')) {
+          // Get the value next to this label
+          const valueEl = label.parentElement?.querySelector('[data-test-id="cdbc-property-value"]');
+          if (valueEl) {
+            category = valueEl.textContent.toLowerCase();
+          }
+        }
+      });
       
       // Get "Open for X days" text
       const timeOpenEl = container.querySelector('[data-test-id="ticket-time-open"]');
@@ -112,8 +123,8 @@
         daysOpen = parseInt(daysMatch[1]);
       }
       
-      // Check for unassigned
-      const isUnassigned = text.includes('unassigned') || text.includes('ikke tildelt') || owner === '--' || owner === '';
+      // Check for unassigned - ticket is unassigned if there's no owner property
+      const isUnassigned = !hasOwner;
       
       // Apply highlights based on priority
       let highlightType = null;
@@ -140,7 +151,7 @@
       }
       
       // Apply the highlight
-      applyCardHighlight(card, highlightType, { daysOpen, isUnassigned, owner });
+      applyCardHighlight(card, highlightType, { daysOpen, isUnassigned, hasOwner });
     });
   }
 
