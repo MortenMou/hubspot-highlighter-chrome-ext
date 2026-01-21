@@ -1,0 +1,265 @@
+/* HubSpot Highlighter - Custom Styles for TRY CS Team */
+
+/* ============================================
+   CONFIGURATION - Edit these CSS variables
+   ============================================ */
+:root {
+  /* Highlight colors */
+  --hs-highlight-urgent: #ff4757;
+  --hs-highlight-warning: #ffa502;
+  --hs-highlight-success: #2ed573;
+  --hs-highlight-info: #3742fa;
+  --hs-highlight-aged: #a55eea;
+  --hs-highlight-muted: #747d8c;
+  
+  /* Glow effects */
+  --hs-glow-urgent: 0 0 0 3px rgba(255, 71, 87, 0.3);
+  --hs-glow-warning: 0 0 0 3px rgba(255, 165, 2, 0.3);
+  --hs-glow-success: 0 0 0 3px rgba(46, 213, 115, 0.3);
+  --hs-glow-aged: 0 0 0 3px rgba(165, 94, 234, 0.3);
+}
+
+/* ============================================
+   TICKET CARD HIGHLIGHTS (Board View)
+   ============================================ */
+
+/* Urgent cards - red highlight */
+.hs-card-urgent,
+[data-hs-highlighted="true"].hs-card-urgent {
+  border-left: 4px solid var(--hs-highlight-urgent) !important;
+  box-shadow: var(--hs-glow-urgent), 0 2px 8px rgba(0,0,0,0.1) !important;
+  background: linear-gradient(90deg, rgba(255, 71, 87, 0.08) 0%, transparent 50%) !important;
+}
+
+/* Warning cards - yellow/orange highlight */
+.hs-card-warning,
+[data-hs-highlighted="true"].hs-card-warning {
+  border-left: 4px solid var(--hs-highlight-warning) !important;
+  box-shadow: var(--hs-glow-warning), 0 2px 8px rgba(0,0,0,0.1) !important;
+  background: linear-gradient(90deg, rgba(255, 165, 2, 0.08) 0%, transparent 50%) !important;
+}
+
+/* Info cards - blue highlight */
+.hs-card-info,
+[data-hs-highlighted="true"].hs-card-info {
+  border-left: 4px solid var(--hs-highlight-info) !important;
+  box-shadow: 0 0 0 2px rgba(55, 66, 250, 0.2), 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Aged cards - purple highlight with pattern */
+.hs-card-aged,
+[data-hs-highlighted="true"].hs-card-aged {
+  border-left: 4px solid var(--hs-highlight-aged) !important;
+  box-shadow: var(--hs-glow-aged), 0 2px 8px rgba(0,0,0,0.1) !important;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(165, 94, 234, 0.06) 8px,
+    rgba(165, 94, 234, 0.06) 16px
+  ) !important;
+}
+
+/* Unassigned cards - dashed border */
+.hs-card-unassigned,
+[data-hs-highlighted="true"].hs-card-unassigned {
+  border: 2px dashed var(--hs-highlight-warning) !important;
+  background: linear-gradient(90deg, rgba(255, 165, 2, 0.05) 0%, transparent 50%) !important;
+}
+
+/* ============================================
+   Also target the inner container for styling
+   ============================================ */
+.hs-card-urgent [data-test-id="title-hover-container"],
+.hs-card-warning [data-test-id="title-hover-container"],
+.hs-card-aged [data-test-id="title-hover-container"] {
+  position: relative;
+}
+
+/* Add a subtle pulse animation for urgent items */
+.hs-card-urgent {
+  animation: urgentPulse 3s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+  0%, 100% { 
+    box-shadow: var(--hs-glow-urgent), 0 2px 8px rgba(0,0,0,0.1);
+  }
+  50% { 
+    box-shadow: 0 0 0 5px rgba(255, 71, 87, 0.2), 0 2px 8px rgba(0,0,0,0.1);
+  }
+}
+
+/* ============================================
+   TABLE ROW HIGHLIGHTS
+   ============================================ */
+
+/* Generic row highlight helper classes */
+.hs-row-urgent {
+  background: linear-gradient(90deg, rgba(255, 71, 87, 0.15) 0%, transparent 100%) !important;
+  border-left: 3px solid var(--hs-highlight-urgent) !important;
+}
+
+.hs-row-warning {
+  background: linear-gradient(90deg, rgba(255, 165, 2, 0.15) 0%, transparent 100%) !important;
+  border-left: 3px solid var(--hs-highlight-warning) !important;
+}
+
+.hs-row-success {
+  background: linear-gradient(90deg, rgba(46, 213, 115, 0.15) 0%, transparent 100%) !important;
+  border-left: 3px solid var(--hs-highlight-success) !important;
+}
+
+.hs-row-info {
+  background: linear-gradient(90deg, rgba(55, 66, 250, 0.15) 0%, transparent 100%) !important;
+  border-left: 3px solid var(--hs-highlight-info) !important;
+}
+
+/* ============================================
+   STATUS TAG HIGHLIGHTS
+   ============================================ */
+
+/* Make specific status tags more visible */
+.hs-status-pulse {
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ============================================
+   UNASSIGNED TICKET HIGHLIGHT
+   ============================================ */
+.hs-unassigned {
+  position: relative;
+}
+
+.hs-unassigned::before {
+  content: "⚠️";
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+}
+
+/* ============================================
+   AGED TICKET HIGHLIGHT
+   ============================================ */
+.hs-aged-ticket {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 71, 87, 0.05) 10px,
+    rgba(255, 71, 87, 0.05) 20px
+  ) !important;
+}
+
+/* ============================================
+   PRIORITY BADGES
+   ============================================ */
+.hs-priority-high {
+  position: relative;
+}
+
+.hs-priority-high::after {
+  content: "🔴";
+  margin-left: 8px;
+  font-size: 10px;
+}
+
+.hs-priority-medium::after {
+  content: "🟡";
+  margin-left: 8px;
+  font-size: 10px;
+}
+
+.hs-priority-low::after {
+  content: "🟢";
+  margin-left: 8px;
+  font-size: 10px;
+}
+
+/* ============================================
+   CUSTOM BADGE STYLES
+   ============================================ */
+.hs-custom-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hs-custom-badge--urgent {
+  background: var(--hs-highlight-urgent);
+  color: white;
+}
+
+.hs-custom-badge--warning {
+  background: var(--hs-highlight-warning);
+  color: white;
+}
+
+/* ============================================
+   TICKET CARD ENHANCEMENTS
+   ============================================ */
+
+/* Add visual indicator for tickets being viewed by others */
+.hs-being-viewed {
+  position: relative;
+  border: 2px dashed var(--hs-highlight-info) !important;
+}
+
+.hs-being-viewed::before {
+  content: attr(data-viewer);
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  background: var(--hs-highlight-info);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  z-index: 10;
+}
+
+/* ============================================
+   HOVER ENHANCEMENTS
+   ============================================ */
+
+/* Make table rows more distinct on hover */
+table tbody tr:hover {
+  background-color: rgba(55, 66, 250, 0.08) !important;
+}
+
+/* ============================================
+   EXTENSION TOGGLE INDICATOR
+   ============================================ */
+.hs-highlighter-active {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hs-highlighter-active.visible {
+  opacity: 1;
+}
