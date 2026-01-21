@@ -40,6 +40,9 @@
     // Highlight unassigned tickets
     highlightUnassigned: true,
     
+    // Enable table view highlighting
+    enableTableHighlighting: true,
+    
     // Custom category highlights (category text -> highlight type)
     categoryHighlights: {
       'bug': 'urgent',
@@ -195,8 +198,10 @@
     // Highlight ticket cards on board views
     highlightTicketCards();
     
-    // Highlight table rows (list view)
-    highlightTableRows();
+    // Highlight table rows (list view) - only if enabled
+    if (CONFIG.enableTableHighlighting) {
+      highlightTableRows();
+    }
     
     // Show indicator if enabled
     if (CONFIG.showIndicator) {
@@ -357,97 +362,117 @@
   // ============================================
 
   function highlightTableRows() {
-    // Find the main ticket table - HubSpot uses specific data attributes
+    // Find the main data table - look for the largest table on the page
     const tables = document.querySelectorAll('table');
+    let mainTable = null;
+    let maxRows = 0;
     
     tables.forEach(table => {
-      // Skip small tables (likely not the main data table)
-      const rows = table.querySelectorAll('tbody tr');
-      if (rows.length < 2) return;
+      // Skip tables inside other tables (nested)
+      if (table.closest('table') !== table.parentElement?.closest('table') && table.parentElement?.closest('table')) {
+        return;
+      }
       
-      // Find header row to identify columns
-      const headerRow = table.querySelector('thead tr');
-      if (!headerRow) return;
+      const rowCount = table.querySelectorAll('tbody > tr').length;
+      if (rowCount > maxRows) {
+        maxRows = rowCount;
+        mainTable = table;
+      }
+    });
+    
+    if (!mainTable || maxRows < 2) {
+      return;
+    }
+    
+    // Find header row to identify columns
+    const headerRow = mainTable.querySelector('thead > tr');
+    if (!headerRow) return;
+    
+    const headers = headerRow.querySelectorAll('th');
+    let dateColIndex = -1;
+    let ownerColIndex = -1;
+    
+    // Find column indices by header text
+    headers.forEach((header, index) => {
+      const text = header.textContent.toLowerCase().trim();
       
-      const headers = headerRow.querySelectorAll('th');
-      let dateColIndex = -1;
-      let ownerColIndex = -1;
+      // Date columns - prioritize "create date" 
+      if (text.includes('create date') || text.includes('opprettet')) {
+        dateColIndex = index;
+        console.log(`🎨 Table: Found CREATE DATE column at index ${index}`);
+      } else if (dateColIndex === -1 && (text.includes('last activity') || text.includes('siste aktivitet') || text.includes('date'))) {
+        dateColIndex = index;
+        console.log(`🎨 Table: Found date column "${text}" at index ${index}`);
+      }
       
-      // Find column indices by header text
-      headers.forEach((header, index) => {
-        const text = header.textContent.toLowerCase().trim();
+      // Owner columns
+      if (text.includes('owner') || text.includes('eier')) {
+        ownerColIndex = index;
+      }
+    });
+    
+    // Get ONLY direct child rows of tbody (not nested rows)
+    const rows = mainTable.querySelectorAll('tbody > tr');
+    
+    console.log(`🎨 Table: Processing ${rows.length} rows, date col: ${dateColIndex}, owner col: ${ownerColIndex}`);
+    
+    let processedCount = 0;
+    
+    rows.forEach((row, rowIndex) => {
+      // Skip if already highlighted
+      if (row.dataset.hsHighlighted === 'true') return;
+      
+      // Skip rows that don't have the expected number of cells (might be grouping rows)
+      const cells = row.querySelectorAll(':scope > td');
+      if (cells.length < 3) return; // Need at least a few columns
+      
+      // Skip rows that contain nested tables
+      if (row.querySelector('table')) return;
+      
+      row.dataset.hsHighlighted = 'true';
+      processedCount++;
+      
+      const rowText = row.textContent.toLowerCase();
+      
+      // 1. Check for urgent keywords first (highest priority)
+      if (CONFIG.urgentKeywords.some(keyword => rowText.includes(keyword.toLowerCase()))) {
+        applyRowHighlight(row, 'urgent');
+        return;
+      }
+      
+      // 2. Try to parse date from the date column
+      if (dateColIndex >= 0 && cells[dateColIndex]) {
+        const dateText = cells[dateColIndex].textContent.trim();
+        const daysSince = getDaysSinceDate(dateText);
         
-        // Date columns
-        if (text.includes('create date') || text.includes('opprettet') || 
-            text.includes('last activity') || text.includes('siste aktivitet') ||
-            text.includes('dato') || text.includes('date')) {
-          if (dateColIndex === -1) { // Take first date column found
-            dateColIndex = index;
-            console.log(`🎨 Table: Found date column "${text}" at index ${index}`);
+        if (daysSince !== null) {
+          const highlightType = getAgeHighlightType(daysSince);
+          applyRowHighlight(row, highlightType);
+          
+          if (rowIndex < 3) {
+            console.log(`🎨 Row ${rowIndex}: "${dateText}" → ${daysSince} days → ${highlightType}`);
           }
-        }
-        
-        // Owner columns
-        if (text.includes('owner') || text.includes('eier') || text.includes('assigned')) {
-          ownerColIndex = index;
-        }
-      });
-      
-      console.log(`🎨 Table: Processing ${rows.length} rows, date col: ${dateColIndex}, owner col: ${ownerColIndex}`);
-      
-      rows.forEach((row, rowIndex) => {
-        // Skip if already highlighted
-        if (row.dataset.hsHighlighted) return;
-        row.dataset.hsHighlighted = 'true';
-        
-        const cells = row.querySelectorAll('td');
-        if (cells.length === 0) return;
-        
-        const rowText = row.textContent.toLowerCase();
-        
-        // 1. Check for urgent keywords first (highest priority)
-        if (CONFIG.urgentKeywords.some(keyword => rowText.includes(keyword.toLowerCase()))) {
-          applyRowHighlight(row, 'urgent');
           return;
         }
-        
-        // 2. Try to parse date from the date column
-        if (dateColIndex >= 0 && cells[dateColIndex]) {
-          const dateText = cells[dateColIndex].textContent.trim();
-          const daysSince = getDaysSinceDate(dateText);
-          
-          if (daysSince !== null) {
-            const highlightType = getAgeHighlightType(daysSince);
-            applyRowHighlight(row, highlightType);
-            
-            // Check for unassigned
-            if (CONFIG.highlightUnassigned && ownerColIndex >= 0 && cells[ownerColIndex]) {
-              const ownerText = cells[ownerColIndex].textContent.trim().toLowerCase();
-              if (ownerText === '--' || ownerText === '' || ownerText.includes('no owner') || ownerText.includes('unassigned')) {
-                row.classList.add('hs-unassigned');
-              }
-            }
-            
-            if (rowIndex < 5) { // Only log first few rows
-              console.log(`🎨 Table row ${rowIndex}: "${dateText}" → ${daysSince} days → ${highlightType}`);
-            }
-            return;
-          }
-        }
-        
-        // 3. Fallback: scan all cells for date-like content
-        for (const cell of cells) {
-          const cellText = cell.textContent.trim();
+      }
+      
+      // 3. Fallback: scan cells for date-like content
+      for (let i = 0; i < cells.length; i++) {
+        const cellText = cells[i].textContent.trim();
+        // Only check cells that look like they might contain dates
+        if (cellText.includes('Today') || cellText.includes('Yesterday') || 
+            cellText.includes('dag') || cellText.match(/\d{1,2}[.\s].*\d{4}/)) {
           const daysSince = getDaysSinceDate(cellText);
-          
           if (daysSince !== null) {
             const highlightType = getAgeHighlightType(daysSince);
             applyRowHighlight(row, highlightType);
             return;
           }
         }
-      });
+      }
     });
+    
+    console.log(`🎨 Table: Highlighted ${processedCount} rows`);
   }
 
   function applyRowHighlight(row, type) {
