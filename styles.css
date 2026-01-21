@@ -75,42 +75,52 @@
 
 /* ============================================
    TABLE ROW HIGHLIGHTS
+   Simple background colors that work with any table structure
    ============================================ */
 
-.hs-row-urgent {
-  background: linear-gradient(90deg, rgba(255, 71, 87, 0.15) 0%, transparent 100%) !important;
-  border-left: 3px solid var(--hs-highlight-urgent) !important;
+/* Apply to TR elements */
+tr.hs-row-urgent,
+tr.hs-row-urgent > td {
+  background-color: rgba(255, 71, 87, 0.12) !important;
 }
 
-.hs-row-fresh {
-  background: linear-gradient(90deg, rgba(46, 213, 115, 0.15) 0%, transparent 100%) !important;
-  border-left: 3px solid var(--hs-highlight-fresh) !important;
+tr.hs-row-fresh,
+tr.hs-row-fresh > td {
+  background-color: rgba(46, 213, 115, 0.12) !important;
 }
 
-.hs-row-attention {
-  background: linear-gradient(90deg, rgba(255, 165, 2, 0.15) 0%, transparent 100%) !important;
-  border-left: 3px solid var(--hs-highlight-attention) !important;
+tr.hs-row-attention,
+tr.hs-row-attention > td {
+  background-color: rgba(255, 165, 2, 0.12) !important;
 }
 
-.hs-row-overdue {
-  background: linear-gradient(90deg, rgba(165, 94, 234, 0.15) 0%, transparent 100%) !important;
-  border-left: 3px solid var(--hs-highlight-overdue) !important;
+tr.hs-row-overdue,
+tr.hs-row-overdue > td {
+  background-color: rgba(165, 94, 234, 0.12) !important;
+}
+
+/* Left border indicator on first cell */
+tr.hs-row-urgent > td:first-child {
+  box-shadow: inset 4px 0 0 var(--hs-highlight-urgent) !important;
+}
+
+tr.hs-row-fresh > td:first-child {
+  box-shadow: inset 4px 0 0 var(--hs-highlight-fresh) !important;
+}
+
+tr.hs-row-attention > td:first-child {
+  box-shadow: inset 4px 0 0 var(--hs-highlight-attention) !important;
+}
+
+tr.hs-row-overdue > td:first-child {
+  box-shadow: inset 4px 0 0 var(--hs-highlight-overdue) !important;
 }
 
 /* ============================================
-   UNASSIGNED INDICATOR
+   UNASSIGNED INDICATOR (disabled for table - too messy)
    ============================================ */
-.hs-unassigned {
+.hs-card-unassigned.hs-unassigned {
   position: relative;
-}
-
-.hs-unassigned::before {
-  content: "⚠️";
-  position: absolute;
-  left: -24px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
 }
 
 /* ============================================
