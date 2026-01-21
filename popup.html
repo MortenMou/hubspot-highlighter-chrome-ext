@@ -161,13 +161,18 @@
     }
     
     .color-preview.urgent { background: #ff4757; }
-    .color-preview.warning { background: #ffa502; }
-    .color-preview.success { background: #2ed573; }
-    .color-preview.info { background: #3742fa; }
+    .color-preview.fresh { background: #2ed573; }
+    .color-preview.attention { background: #ffa502; }
+    .color-preview.overdue { background: #a55eea; }
     
     .color-label {
       font-size: 12px;
       flex: 1;
+    }
+    
+    .color-days {
+      font-size: 11px;
+      color: #a1a1aa;
     }
     
     .status-badge {
@@ -223,6 +228,23 @@
     .save-btn.saved {
       background: #2ed573;
     }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .input-row .keyword-input {
+      width: 50%;
+    }
+
+    .input-row label {
+      font-size: 11px;
+      color: #a1a1aa;
+      display: block;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
@@ -249,7 +271,7 @@
     <div class="toggle-section">
       <div>
         <div class="toggle-label">Highlight Unassigned</div>
-        <div class="toggle-desc">Mark unassigned tickets</div>
+        <div class="toggle-desc">Add dashed border to tickets without an owner</div>
       </div>
       <label class="toggle">
         <input type="checkbox" id="highlightUnassigned" checked>
@@ -260,7 +282,7 @@
     <div class="toggle-section">
       <div>
         <div class="toggle-label">Show Indicator</div>
-        <div class="toggle-desc">Display active badge in corner</div>
+        <div class="toggle-desc">Display active badge in corner on load</div>
       </div>
       <label class="toggle">
         <input type="checkbox" id="showIndicator">
@@ -271,34 +293,43 @@
     <div class="section-title">🔴 Urgent Keywords</div>
     <input type="text" class="keyword-input" id="urgentKeywords" 
            placeholder="urgent, haster, kritisk, critical, asap">
-    <div class="keyword-hint">Comma-separated. These items get red highlights.</div>
+    <div class="keyword-hint">Comma-separated. These always show red (highest priority).</div>
     
-    <div class="section-title">🟡 Warning Keywords</div>
-    <input type="text" class="keyword-input" id="warningKeywords" 
-           placeholder="important, viktig, snart, soon">
-    <div class="keyword-hint">Comma-separated. These items get yellow highlights.</div>
+    <div class="section-title">📅 Ticket Age Thresholds</div>
+    <div class="input-row">
+      <div>
+        <label>Fresh (green) up to</label>
+        <input type="number" class="keyword-input" id="freshTicketDays" 
+               placeholder="2" min="0" max="365" value="2">
+      </div>
+      <div>
+        <label>Attention (yellow) up to</label>
+        <input type="number" class="keyword-input" id="warningTicketDays" 
+               placeholder="5" min="1" max="365" value="5">
+      </div>
+    </div>
+    <div class="keyword-hint">Tickets older than the attention threshold show as overdue (purple).</div>
     
-    <div class="section-title">📅 Aged Tickets (Days)</div>
-    <input type="number" class="keyword-input" id="agedTicketDays" 
-           placeholder="7" min="1" max="365" value="7">
-    <div class="keyword-hint">Tickets older than this get a striped background.</div>
-    
-    <div class="section-title">Highlight Colors</div>
+    <div class="section-title">Color Legend</div>
     <div class="color-row">
       <div class="color-preview urgent"></div>
-      <span class="color-label">Urgent / Critical</span>
+      <span class="color-label">Urgent keywords</span>
+      <span class="color-days">haster, kritisk...</span>
     </div>
     <div class="color-row">
-      <div class="color-preview warning"></div>
-      <span class="color-label">Warning / Important</span>
+      <div class="color-preview fresh"></div>
+      <span class="color-label">Fresh</span>
+      <span class="color-days">0-2 days</span>
     </div>
     <div class="color-row">
-      <div class="color-preview success"></div>
-      <span class="color-label">Success / Resolved</span>
+      <div class="color-preview attention"></div>
+      <span class="color-label">Needs attention</span>
+      <span class="color-days">3-5 days</span>
     </div>
     <div class="color-row">
-      <div class="color-preview info"></div>
-      <span class="color-label">Info / In Progress</span>
+      <div class="color-preview overdue"></div>
+      <span class="color-label">Overdue</span>
+      <span class="color-days">6+ days</span>
     </div>
   </div>
   
