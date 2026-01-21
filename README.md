@@ -1,15 +1,15 @@
 # HubSpot Highlighter - Chrome Extension
 
-A Chrome extension to visually highlight important items in HubSpot for the CS team.
+A Chrome extension to visually highlight tickets in HubSpot based on their age, helping you track response times at a glance.
 
 ## Features
 
-- 🔴 **Urgent Highlighting**: Red border/glow for tickets containing urgent keywords
-- 🟡 **Warning Highlighting**: Yellow border for important items
-- 🟢 **Status-based Colors**: Different colors for different ticket statuses
-- ⚠️ **Unassigned Indicators**: Visual marker for unassigned tickets
-- 📅 **Aged Ticket Detection**: Striped background for old tickets
-- ⚙️ **Configurable**: Easy popup to customize keywords and settings
+- 🟢 **Fresh Tickets** (green): 0-2 days old – good response time
+- 🟡 **Needs Attention** (yellow): 3-5 days old – should be addressed soon
+- 🟣 **Overdue** (purple): 6+ days old – requires immediate attention
+- 🔴 **Urgent Keywords** (red, pulsing): Tickets containing words like "haster", "kritisk", "urgent"
+- ⚠️ **Unassigned Indicator**: Dashed border on tickets without an owner
+- ⚙️ **Configurable**: Customize thresholds and keywords via the popup
 
 ## Installation
 
@@ -27,10 +27,17 @@ A Chrome extension to visually highlight important items in HubSpot for the CS t
 Click the extension icon to open the settings popup where you can:
 
 - **Enable/Disable** the highlighter
-- **Urgent Keywords**: Words that trigger red highlighting (e.g., "urgent", "haster", "kritisk")
-- **Warning Keywords**: Words that trigger yellow highlighting (e.g., "important", "viktig")
-- **Aged Tickets Days**: How old (in days) before tickets get a striped warning background
-- **Highlight Unassigned**: Toggle to mark unassigned tickets
+- **Urgent Keywords**: Words that trigger red highlighting (highest priority)
+- **Fresh ticket days**: Maximum age for green highlighting (default: 2)
+- **Attention ticket days**: Maximum age for yellow highlighting (default: 5)
+- **Highlight Unassigned**: Add dashed border to tickets without an owner
+
+## Color Priority
+
+1. **Urgent keywords** (red) – always takes priority if keyword is found in title
+2. **Age-based colors** – applied to all other tickets:
+   - Green → Yellow → Purple as tickets get older
+3. **Unassigned** – dashed border layered on top of age color
 
 ## Files
 
@@ -45,3 +52,7 @@ Click the extension icon to open the settings popup where you can:
     ├── icon48.png
     └── icon128.png
 ```
+
+## Author
+
+Created by Morten Mouritzen
