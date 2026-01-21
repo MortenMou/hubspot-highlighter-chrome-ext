@@ -32,7 +32,7 @@
     // Keywords that trigger urgent highlighting (case-insensitive)
     urgentKeywords: ['urgent', 'haster', 'kritisk', 'critical', 'asap'],
     
-    // Age-based highlighting thresholds (in days)
+    // Age-based highlighting thresholds (in days since last activity)
     freshTicketDays: 2,    // 0 to this = green (fresh)
     warningTicketDays: 5,  // freshTicketDays+1 to this = yellow (needs attention)
                            // above this = purple (overdue)
@@ -47,6 +47,21 @@
       'error': 'urgent'
     }
   };
+
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
+
+  function getDaysSinceDate(dateString) {
+    // Parse date string like "2026-01-14"
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
+    
+    const now = new Date();
+    const diffTime = now - date;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
 
   // ============================================
   // HIGHLIGHT LOGIC
@@ -85,11 +100,11 @@
     return null;
   }
 
-  function getAgeHighlightType(daysOpen) {
-    // Returns highlight type based on ticket age
-    if (daysOpen <= CONFIG.freshTicketDays) {
+  function getAgeHighlightType(daysSinceActivity) {
+    // Returns highlight type based on days since last activity
+    if (daysSinceActivity <= CONFIG.freshTicketDays) {
       return 'fresh';      // Green - good response time
-    } else if (daysOpen <= CONFIG.warningTicketDays) {
+    } else if (daysSinceActivity <= CONFIG.warningTicketDays) {
       return 'attention';  // Yellow - needs attention
     } else {
       return 'overdue';    // Purple - overdue
@@ -110,40 +125,44 @@
       if (card.dataset.hsHighlighted) return;
       card.dataset.hsHighlighted = 'true';
       
-      const text = container.textContent.toLowerCase();
-      
       // Get title
       const titleEl = container.querySelector('[data-test-id="board-card-section-title-link"]');
       const title = titleEl ? titleEl.textContent.toLowerCase() : '';
       
-      // Check for Ticket owner by looking for the label
+      // Parse property labels to find owner, category, and last activity date
       const propertyLabels = container.querySelectorAll('[data-test-id="cdbc-property-label"]');
       let hasOwner = false;
       let category = '';
+      let lastActivityDate = null;
       
       propertyLabels.forEach(label => {
         const labelText = label.textContent.toLowerCase();
+        const valueEl = label.parentElement?.querySelector('[data-test-id="cdbc-property-value"]');
+        const value = valueEl ? valueEl.textContent.trim() : '';
+        
+        // Check for ticket owner
         if (labelText.includes('ticket owner') || labelText.includes('eier') || labelText.includes('owner')) {
           hasOwner = true;
         }
+        
+        // Check for category
         if (labelText.includes('category') || labelText.includes('kategori')) {
-          // Get the value next to this label
-          const valueEl = label.parentElement?.querySelector('[data-test-id="cdbc-property-value"]');
-          if (valueEl) {
-            category = valueEl.textContent.toLowerCase();
-          }
+          category = value.toLowerCase();
+        }
+        
+        // Check for last activity date (format: 2026-01-14)
+        if (labelText.includes('last activity') || labelText.includes('siste aktivitet')) {
+          lastActivityDate = value;
         }
       });
       
-      // Get "Open for X days" text
-      const timeOpenEl = container.querySelector('[data-test-id="ticket-time-open"]');
-      const timeOpenText = timeOpenEl ? timeOpenEl.textContent : '';
-      
-      // Parse days open (default to 0 if only hours/minutes)
-      let daysOpen = 0;
-      const daysMatch = timeOpenText.match(/(\d+)\s*(dag|day)/i);
-      if (daysMatch) {
-        daysOpen = parseInt(daysMatch[1]);
+      // Calculate days since last activity
+      let daysSinceActivity = 0;
+      if (lastActivityDate) {
+        const days = getDaysSinceDate(lastActivityDate);
+        if (days !== null) {
+          daysSinceActivity = days;
+        }
       }
       
       // Check for unassigned - ticket is unassigned if there's no owner property
@@ -160,13 +179,13 @@
       else if (category && CONFIG.categoryHighlights[category]) {
         highlightType = CONFIG.categoryHighlights[category];
       }
-      // 3. Age-based highlighting (green/yellow/purple)
+      // 3. Age-based highlighting (green/yellow/purple) based on last activity
       else {
-        highlightType = getAgeHighlightType(daysOpen);
+        highlightType = getAgeHighlightType(daysSinceActivity);
       }
       
       // Apply the highlight
-      applyCardHighlight(card, highlightType, { daysOpen, isUnassigned, hasOwner });
+      applyCardHighlight(card, highlightType, { daysSinceActivity, isUnassigned, hasOwner, lastActivityDate });
     });
   }
 
@@ -192,7 +211,7 @@
     // Log for debugging
     console.log(`🎨 Highlighted card as ${type}${info.isUnassigned ? ' (unassigned)' : ''}:`, 
       card.querySelector('[data-test-id="board-card-section-title-link"]')?.textContent?.trim(),
-      `(${info.daysOpen} days)`
+      `(${info.daysSinceActivity} days since activity, last: ${info.lastActivityDate || 'unknown'})`
     );
   }
 
