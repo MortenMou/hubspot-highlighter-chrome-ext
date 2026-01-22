@@ -503,30 +503,75 @@
   }
 
   // ============================================
+  // URL CHANGE DETECTION (for SPA navigation)
+  // ============================================
+  
+  let lastUrl = window.location.href;
+  
+  function checkUrlChange() {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      console.log('🎨 URL changed, re-checking page...');
+      
+      // Reset all highlighted flags
+      document.querySelectorAll('[data-hs-highlighted]').forEach(el => {
+        delete el.dataset.hsHighlighted;
+      });
+      
+      // Remove indicator so it can be re-added
+      const indicator = document.querySelector('.hs-highlighter-active');
+      if (indicator) indicator.remove();
+      
+      // Re-run highlighting if still on ticket page
+      if (isTicketPage()) {
+        // Small delay to let HubSpot render new content
+        setTimeout(highlightElements, 500);
+      }
+    }
+  }
+
+  // ============================================
   // MUTATION OBSERVER - Watch for DOM changes
   // ============================================
 
   let debounceTimer;
   const observer = new MutationObserver(() => {
+    // Check for URL changes (SPA navigation)
+    checkUrlChange();
+    
+    // Debounce highlight updates
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(highlightElements, 200);
   });
 
-  // Start observing when DOM is ready
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+
   function init() {
-    // Initial highlight pass
+    console.log('🎨 HubSpot Highlighter initializing...');
+    
+    // Try to highlight immediately
     highlightElements();
     
-    // Watch for dynamic content
+    // Also try after a short delay (for slow-loading content)
+    setTimeout(highlightElements, 500);
+    setTimeout(highlightElements, 1000);
+    setTimeout(highlightElements, 2000);
+    
+    // Watch for dynamic content changes
     observer.observe(document.body, {
       childList: true,
       subtree: true
     });
     
+    // Also check URL periodically (backup for SPA navigation)
+    setInterval(checkUrlChange, 1000);
+    
     console.log('🎨 HubSpot Highlighter loaded on ticket page');
   }
 
-  // Load saved settings
+  // Load saved settings then initialize
   if (typeof chrome !== 'undefined' && chrome.storage) {
     chrome.storage.sync.get(['highlighterConfig'], (result) => {
       if (result.highlighterConfig) {
