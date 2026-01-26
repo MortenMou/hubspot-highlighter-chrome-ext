@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HubSpot Highlighter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Highlight important items in HubSpot. Using 'Last Activity Date' as guide, so this must be present in the view",
   "permissions": ["storage"],
   "host_permissions": ["https://app.hubspot.com/*", "https://app-eu1.hubspot.com/*"],
@@ -9,7 +9,7 @@
     {
       "matches": ["https://app.hubspot.com/*", "https://app-eu1.hubspot.com/*"],
       "css": ["styles.css"],
-      "js": ["content.js"],
+      "js": ["content.js", "lightbox.js"],
       "run_at": "document_idle"
     }
   ],
