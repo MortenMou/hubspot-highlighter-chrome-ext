@@ -1,10 +1,11 @@
-// HubSpot Highlighter - Popup Script
+// HubSpot Ticket Helper - Popup Script
 
 document.addEventListener('DOMContentLoaded', () => {
   const elements = {
     enabled: document.getElementById('enabled'),
     highlightUnassigned: document.getElementById('highlightUnassigned'),
     showIndicator: document.getElementById('showIndicator'),
+    enableLightbox: document.getElementById('enableLightbox'),
     urgentKeywords: document.getElementById('urgentKeywords'),
     freshTicketDays: document.getElementById('freshTicketDays'),
     warningTicketDays: document.getElementById('warningTicketDays'),
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     enabled: true,
     showIndicator: false,
     highlightUnassigned: true,
+    enableLightbox: true,
     urgentKeywords: ['urgent', 'haster', 'kritisk', 'critical', 'asap'],
     freshTicketDays: 2,
     warningTicketDays: 5
@@ -29,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.enabled.checked = config.enabled;
       elements.highlightUnassigned.checked = config.highlightUnassigned;
       elements.showIndicator.checked = config.showIndicator;
+      elements.enableLightbox.checked = config.enableLightbox !== false; // Default to true
       elements.urgentKeywords.value = config.urgentKeywords.join(', ');
       elements.freshTicketDays.value = config.freshTicketDays;
       elements.warningTicketDays.value = config.warningTicketDays;
@@ -41,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       enabled: elements.enabled.checked,
       highlightUnassigned: elements.highlightUnassigned.checked,
       showIndicator: elements.showIndicator.checked,
+      enableLightbox: elements.enableLightbox.checked,
       urgentKeywords: elements.urgentKeywords.value
         .split(',')
         .map(s => s.trim().toLowerCase())
@@ -74,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.saveBtn.addEventListener('click', saveSettings);
 
   // Auto-save on toggle changes
-  ['enabled', 'highlightUnassigned', 'showIndicator'].forEach(id => {
+  ['enabled', 'highlightUnassigned', 'showIndicator', 'enableLightbox'].forEach(id => {
     elements[id].addEventListener('change', saveSettings);
   });
 
