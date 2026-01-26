@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HubSpot Highlighter</title>
+  <title>HubSpot Ticket Helper</title>
   <style>
     * {
       box-sizing: border-box;
@@ -245,13 +245,19 @@
       display: block;
       margin-bottom: 4px;
     }
+
+    .section-divider {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin-top: 12px;
+      padding-top: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <span class="header-icon">🎨</span>
+    <span class="header-icon">🎫</span>
     <div>
-      <h1>HubSpot Highlighter</h1>
+      <h1>HubSpot Ticket Helper</h1>
       <p>by Morten Mouritzen</p>
     </div>
   </div>
@@ -260,7 +266,7 @@
     <div class="toggle-section">
       <div>
         <div class="toggle-label">Enable Highlighting</div>
-        <div class="toggle-desc">Apply visual highlights to HubSpot</div>
+        <div class="toggle-desc">Apply visual highlights to tickets</div>
       </div>
       <label class="toggle">
         <input type="checkbox" id="enabled" checked>
@@ -289,6 +295,17 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
+
+    <div class="toggle-section">
+      <div>
+        <div class="toggle-label">🖼️ Image Lightbox</div>
+        <div class="toggle-desc">Click images in conversations to enlarge</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="enableLightbox" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
     
     <div class="section-title">🔴 Urgent Keywords</div>
     <input type="text" class="keyword-input" id="urgentKeywords" 
@@ -310,7 +327,7 @@
     </div>
     <div class="keyword-hint">Tickets older than the attention threshold show as overdue (purple).</div>
     
-    <div class="section-title">Color Legend</div>
+    <div class="section-title section-divider">Color Legend</div>
     <div class="color-row">
       <div class="color-preview urgent"></div>
       <span class="color-label">Urgent keywords</span>
