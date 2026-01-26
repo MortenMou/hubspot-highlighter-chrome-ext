@@ -444,6 +444,8 @@
   // ============================================
 
   function makeImagesClickable() {
+    if (!LIGHTBOX_CONFIG.enabled) return;
+
     // Find images in conversation/email threads
     // Target common HubSpot conversation containers
     const selectors = [
@@ -506,6 +508,8 @@
 
       // Add click handler
       img.addEventListener('click', (e) => {
+        if (!LIGHTBOX_CONFIG.enabled) return;
+        
         e.preventDefault();
         e.stopPropagation();
         
@@ -525,16 +529,76 @@
   }
 
   // ============================================
+  // DISABLE LIGHTBOX
+  // ============================================
+
+  function disableLightbox() {
+    // Remove clickable class from all images
+    document.querySelectorAll('.hs-clickable-image').forEach(img => {
+      img.classList.remove('hs-clickable-image');
+    });
+    
+    // Close lightbox if open
+    closeLightbox();
+    
+    console.log('🖼️ Lightbox disabled');
+  }
+
+  function enableLightbox() {
+    LIGHTBOX_CONFIG.enabled = true;
+    makeImagesClickable();
+    console.log('🖼️ Lightbox enabled');
+  }
+
+  // ============================================
   // INITIALIZATION
   // ============================================
 
+  let observer = null;
+
   function init() {
+    // Load settings
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.sync.get(['highlighterConfig'], (result) => {
+        const config = result.highlighterConfig || {};
+        LIGHTBOX_CONFIG.enabled = config.enableLightbox !== false; // Default to true
+        
+        if (LIGHTBOX_CONFIG.enabled) {
+          startLightbox();
+        } else {
+          console.log('🖼️ Lightbox is disabled in settings');
+        }
+      });
+
+      // Listen for settings changes
+      chrome.storage.onChanged.addListener((changes) => {
+        if (changes.highlighterConfig) {
+          const newConfig = changes.highlighterConfig.newValue || {};
+          const wasEnabled = LIGHTBOX_CONFIG.enabled;
+          LIGHTBOX_CONFIG.enabled = newConfig.enableLightbox !== false;
+          
+          if (LIGHTBOX_CONFIG.enabled && !wasEnabled) {
+            enableLightbox();
+          } else if (!LIGHTBOX_CONFIG.enabled && wasEnabled) {
+            disableLightbox();
+          }
+        }
+      });
+    } else {
+      // No chrome.storage, just start
+      startLightbox();
+    }
+  }
+
+  function startLightbox() {
     // Initial scan
     makeImagesClickable();
 
     // Watch for new images (dynamic content)
-    const observer = new MutationObserver(() => {
-      makeImagesClickable();
+    observer = new MutationObserver(() => {
+      if (LIGHTBOX_CONFIG.enabled) {
+        makeImagesClickable();
+      }
     });
 
     observer.observe(document.body, {
